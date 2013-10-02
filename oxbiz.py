@@ -14,7 +14,7 @@ result = urllib2.urlopen(XML_FETCHER_URL).read()
 time.sleep(1)
 tree = ET.ElementTree(file='/tmp/text.xml')
 
-people = ['David Brodsky', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jan-Christoph Borchardt', 'Jam Kotenko', 'Jason Kotenko', 'Kendall Webster', 'Matt Gattis', 'Rich Jones', 'Benjamin Gleitzman', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li']
+people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jan-Christoph Borchardt', 'Jam Kotenko', 'Jason Kotenko', 'Kendall Webster', 'Matt Gattis', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine']
 
 now = datetime.now()
 monday = now - timedelta(days=(now.weekday() - 1))
@@ -40,6 +40,8 @@ for item in items:
                 people.remove(canonical_name)
         info_dict = {'title': item[0].text.strip(),
                      'url': item[1].text.strip()}
+        if name == 'me':
+            name = 'Benjamin Gleitzman'
         people_who_wrote.setdefault(name, []).append(info_dict)
 
 EMAIL_FORM = u'''
