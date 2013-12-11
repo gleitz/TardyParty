@@ -1,5 +1,5 @@
 Examines a private Google Groups RSS feed to determine who has and has not posted during the week.
 
-- Pip install selenium
-- Edit the username and password in secret.txt
-- Run oxbiz.py
+- `pip install selenium`
+- Copy `secret.txt.example` to `secret.txt`
+- `python oxbiz.py`
