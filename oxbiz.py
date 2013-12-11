@@ -1,28 +1,64 @@
 import os
 import difflib
 import re
-import time
-import urllib2
+import json
 import xml.etree.cElementTree as ET
 
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 from datetime import datetime, timedelta
 
 GOOGLE_TIME = '%a, %d %b %Y %H:%M:%S UTC'
-XML_FETCHER_URL = 'http://localhost:9001/GoogleGroups2Rss/index.php?group=oxidized-bismuth-blogger'
 
-result = urllib2.urlopen(XML_FETCHER_URL).read()
-time.sleep(1)
-tree = ET.ElementTree(file='/tmp/text.xml')
+# download the XML
+with open('secret.txt', 'r') as f:
+    secret = json.load(f)
+    username = secret['gmail']['username']
+    password = secret['gmail']['password']
 
-people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jan-Christoph Borchardt', 'Jam Kotenko', 'Jason Kotenko', 'Kendall Webster', 'Matt Gattis', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine']
+chrome_options = Options()
+chrome_options.add_argument("--verbose")
+driver = webdriver.Chrome('./chromedriver', chrome_options=chrome_options)
+
+driver.get(u'http://www.google.com')
+
+driver.implicitly_wait(10)
+
+elem = driver.find_element_by_id("gb_70")
+elem.click()
+
+user_field = driver.find_element_by_id('Email')
+user_field.send_keys(username)
+password_field = driver.find_element_by_id('Passwd')
+password_field.send_keys(password)
+
+driver.find_element_by_id('signIn').click()
+driver.get(u'https://groups.google.com/group/oxidized-bismuth-blogger/feed/rss_v2_0_msgs.xml?num=100')
+
+xml = driver.find_element_by_id('webkit-xml-viewer-source-xml')
+xml = xml.get_attribute('innerHTML')
+
+driver.quit()
+
+xml = xml.encode('utf-8')
+
+# with open('/Users/bgleitzman/Downloads/rss_v2_0.xml') as f:
+    # xml = f.read()
+
+tree = ET.fromstring(xml)
+
+people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jam Kotenko', 'Jason Kotenko', 'Matt Gattis', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine', 'Heather Conover', 'Adrian Winn', 'Andrew Magliozzi']
+# hiatus
+# 'Kendall Webster'
+# 'Jan-Christoph Borchardt'
 
 now = datetime.now()
 monday = now - timedelta(days=(now.weekday() - 1))
-last_monday = monday - timedelta(days=8)
+last_monday = monday - timedelta(days=16)
 
 people_who_wrote = {}
 
-items = tree.getroot()[0][4:] # start of messages
+items = tree[0][4:] # start of messages
 name_re = re.compile("\((.*)\)") # match name inside parens
 for item in items:
     item_pubdate = datetime.strptime(item[5].text.strip(), GOOGLE_TIME)

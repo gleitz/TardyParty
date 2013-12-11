@@ -1,5 +1,5 @@
 Examines a private Google Groups RSS feed to determine who has and has not posted during the week.
 
-- Edit the username and password in GoogleGroups2Rss/config.php
-- Place GoogleGroups2Rss in a location that serves PHP.
+- Pip install selenium
+- Edit the username and password in secret.txt
 - Run oxbiz.py
