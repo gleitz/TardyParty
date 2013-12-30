@@ -54,7 +54,7 @@ people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Balli
 
 now = datetime.now()
 monday = now - timedelta(days=(now.weekday() - 1))
-last_monday = monday - timedelta(days=16)
+last_monday = monday - timedelta(days=8)
 
 people_who_wrote = {}
 
