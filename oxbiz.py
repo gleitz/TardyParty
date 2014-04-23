@@ -33,7 +33,7 @@ password_field = driver.find_element_by_id('Passwd')
 password_field.send_keys(password)
 
 driver.find_element_by_id('signIn').click()
-driver.get(u'https://groups.google.com/group/oxidized-bismuth-blogger/feed/rss_v2_0_msgs.xml?num=100')
+driver.get(u'https://groups.google.com/forum/feed/oxidized-bismuth-blogger/topics/rss.xml?num=50')
 
 xml = driver.find_element_by_id('webkit-xml-viewer-source-xml')
 xml = xml.get_attribute('innerHTML')
@@ -47,14 +47,15 @@ xml = xml.encode('utf-8')
 
 tree = ET.fromstring(xml)
 
-people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jam Kotenko', 'Jason Kotenko', 'Matt Gattis', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine', 'Heather Conover', 'Adrian Winn', 'Andrew Magliozzi']
+people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jam Kotenko', 'Jason Kotenko', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine', 'Heather Conover', 'Adrian Winn', 'Andrew Magliozzi', 'George Zisiadis', 'Sean Taylor', 'Collin Morris', 'Fernandocg', 'Randy Lubin', 'Jeremy Herrman']
 # hiatus
 # 'Kendall Webster'
 # 'Jan-Christoph Borchardt'
+# , 'Matt Gattis'
 
 now = datetime.now()
 monday = now - timedelta(days=(now.weekday() - 1))
-last_monday = monday - timedelta(days=8)
+last_monday = monday - timedelta(days=15)
 
 people_who_wrote = {}
 
