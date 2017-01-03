@@ -1,11 +1,13 @@
 import os
 import difflib
 import re
+import time
 import json
 import xml.etree.cElementTree as ET
 
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.common.exceptions import NoSuchElementException
 from datetime import datetime, timedelta
 
 GOOGLE_TIME = '%a, %d %b %Y %H:%M:%S UTC'
@@ -18,21 +20,34 @@ with open('secret.txt', 'r') as f:
 
 chrome_options = Options()
 chrome_options.add_argument("--verbose")
+chrome_options.add_argument("user-data-dir=/Users/bgleitzman/projects/TardyParty")
+chrome_options.add_argument("user-agent=Mozilla/5.0 (Macintosh; Intel Mac OS X 10_7_4) AppleWebKit/536.5 (KHTML, like Gecko) Chrome/19.0.1084.46 Safari/536.5")
 driver = webdriver.Chrome('./chromedriver', chrome_options=chrome_options)
 
-driver.get(u'http://www.google.com')
+driver.get(u'http://www.groups.google.com')
 
 driver.implicitly_wait(10)
 
-elem = driver.find_element_by_id("gb_70")
-elem.click()
+try:
+    elem = driver.find_element_by_id("gb_70")
+    elem.click()
 
-user_field = driver.find_element_by_id('Email')
-user_field.send_keys(username)
-password_field = driver.find_element_by_id('Passwd')
-password_field.send_keys(password)
+    user_field = driver.find_element_by_id('Email')
+    user_field.send_keys(username)
 
-driver.find_element_by_id('signIn').click()
+    elem = driver.find_element_by_id("next")
+    elem.click()
+
+    password_field = driver.find_element_by_id('Passwd')
+    password_field.send_keys(password)
+
+    driver.find_element_by_id('signIn').click()
+
+    time.sleep(20)
+except NoSuchElementException:
+    # already signed in
+    pass
+
 driver.get(u'https://groups.google.com/forum/feed/oxidized-bismuth-blogger/topics/rss.xml?num=50')
 
 xml = driver.find_element_by_id('webkit-xml-viewer-source-xml')
@@ -42,44 +57,51 @@ driver.quit()
 
 xml = xml.encode('utf-8')
 
-# with open('/Users/bgleitzman/Downloads/rss_v2_0.xml') as f:
+# with open('rss.xml') as f:
     # xml = f.read()
 
 tree = ET.fromstring(xml)
 
-people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jam Kotenko', 'Jason Kotenko', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine', 'Heather Conover', 'Adrian Winn', 'Andrew Magliozzi', 'George Zisiadis', 'Sean Taylor', 'Collin Morris', 'Fernandocg', 'Randy Lubin', 'Jeremy Herrman']
+people = ['dbro', 'Jorin Vogel', 'savannahjune', 'Nicole Ricasata', 'Chris Ballinger', 'Chris Maury', 'Evan Burchard', 'Jam Kotenko', 'Jason Kotenko', 'Rich Jones', 'me', 'Geoff', 'Parker Phinney', 'Chris Christakis', 'Dmitri Sullivan', 'Janet Li', 'Kara Oehler', 'Dan Levine', 'Heather Conover', 'Adrian Winn', 'Andrew Magliozzi', 'George Zisiadis', 'sean.taylorleech', 'Collin Morris', 'Fernandocg', 'Randy Lubin', 'Jeremy Herrman', 'Freenerd', 'folkloregold', 'Katie Johnson', 'wdaher', 'Paul Pollack', 'Katie Broida', 's.d.a.herzog', 'Anthony Ferraro', 'nick', 'Vivek S.', 'Brentan Alexander', 'Ruvan', 'dmitric', 'Ted Seabright', 'Emily Sutton', 'tlcarvalho74', 'Luke Carlson', 'majikman', 'Benjamin Gleitzman', 'Sam Fomon', 'John Shahabian']
 # hiatus
-# 'Kendall Webster'
-# 'Jan-Christoph Borchardt'
-# , 'Matt Gattis'
 
 now = datetime.now()
-monday = now - timedelta(days=(now.weekday() - 1))
-last_monday = monday - timedelta(days=15)
+monday = now - timedelta(days=(now.weekday()))
+# days=8, weekday - 1 if you're running on a tuesday
+last_monday = monday - timedelta(days=23)
 
 people_who_wrote = {}
 
-items = tree[0][4:] # start of messages
-name_re = re.compile("\((.*)\)") # match name inside parens
+items = tree[0][4:]  # start of messages
+name_re = re.compile("\((.*)\)")  # match name inside parens
 for item in items:
     item_pubdate = datetime.strptime(item[5].text.strip(), GOOGLE_TIME)
     if item_pubdate > last_monday and item_pubdate < monday:
-        if 'Re:' in item[0].text.strip():
+        if not item[0].text or 'Re:' in item[0].text.strip():
             continue
         clean_name = item[4].text.strip()
         if '(' not in clean_name:
             continue
         name = name_re.search(clean_name).groups()[0]
-        if name not in people_who_wrote:
+
+        if name == 'me':
+            name = 'Benjamin Gleitzman'
+
+        info_dict = {}
+
+        if name in people_who_wrote:
+            info_dict = {'title': item[0].text.strip(),
+                         'url': item[1].text.strip()}
+        else:
             canonical_names = difflib.get_close_matches(name, people)
             if canonical_names:
                 canonical_name = canonical_names[0]
                 people.remove(canonical_name)
-        info_dict = {'title': item[0].text.strip(),
-                     'url': item[1].text.strip()}
-        if name == 'me':
-            name = 'Benjamin Gleitzman'
-        people_who_wrote.setdefault(name, []).append(info_dict)
+                info_dict = {'title': item[0].text.strip(),
+                             'url': item[1].text.strip()}
+
+        if info_dict:
+            people_who_wrote.setdefault(name, []).append(info_dict)
 
 EMAIL_FORM = u'''
 <p>My dearest idea generator,</p>
@@ -121,5 +143,5 @@ f.close()
 os.system('open /tmp/oxbiz.html')
 
 print email_str
-# print 'People who wrote are', ', '.join(people_who_wrote.keys())
-# print 'People who didn\'t write are', ', '.join(people)
+print 'People who wrote are', ', '.join(people_who_wrote.keys())
+print 'People who didn\'t write are', ', '.join(people)
